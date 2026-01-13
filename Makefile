@@ -51,25 +51,25 @@ LDLIBS += -L $(shell pkg-config --variable=libdir boost)
 LDLIBS += -lboost_context -lboost_container -lboost_coroutine -lboost_url -lboost_iostreams
 
 VPATH += src
-SRC := $(shell find libutil -maxdepth 1 -name "*.cc")
-SRC += $(shell find libutil/linux -maxdepth 1 -name "*.cc")
-SRC += $(shell find libutil/unix -maxdepth 1 -name "*.cc")
+SRC := $(shell find libutil -maxdepth 1 -name "*.cpp")
+SRC += $(shell find libutil/linux -maxdepth 1 -name "*.cpp")
+SRC += $(shell find libutil/unix -maxdepth 1 -name "*.cpp")
 
 vpath %.cpp $(VPATH)
 
-OBJ := $(SRC:%.cc=$(BUILD_DIR)/%.o)
+OBJ := $(SRC:%.cpp=$(BUILD_DIR)/%.o)
 
 .PHONY: all
 all: $(OUT)
 
-$(BUILD_DIR)/%.o: %.cc
+$(BUILD_DIR)/%.o: %.cpp
 	@ mkdir -p $(dir $@)
 	$Q $(CXX) $(CXXFLAGS) -o $@ -c $<
 	@ $(LOG_TIME) "CXX $(C_PURPLE) $(notdir $@) $(C_RESET)"
 
 $(OUT): $(OBJ)
 	@ mkdir -p $(dir $@)
-	$Q $(CXX) -o $@ main.cc $(OBJ) $(CXXFLAGS) $(LDLIBS) $(LDFLAGS)
+	$Q $(CXX) -o $@ main.cpp $(OBJ) $(CXXFLAGS) $(LDLIBS) $(LDFLAGS)
 	@ $(LOG_TIME) "LD $(C_GREEN) $@ $(C_RESET)"
 
 .PHONY: clean

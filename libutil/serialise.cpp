@@ -1,5 +1,4 @@
 #include "nix/util/serialise.hh"
-#include "nix/util/signals.hh"
 #include "nix/util/util.hh"
 
 #include <cstring>
@@ -8,13 +7,7 @@
 
 #include <boost/coroutine2/coroutine.hpp>
 
-#ifdef _WIN32
-#  include <fileapi.h>
-#  include <winsock2.h>
-#  include "nix/util/windows-error.hh"
-#else
 #  include <poll.h>
-#endif
 
 namespace nix {
 
@@ -135,17 +128,8 @@ bool BufferedSource::hasData()
 
 size_t FdSource::readUnbuffered(char * data, size_t len)
 {
-#ifdef _WIN32
-    DWORD n;
-    checkInterrupt();
-    if (!::ReadFile(fd, data, len, &n, NULL)) {
-        _good = false;
-        throw windows::WinError("ReadFile when FdSource::readUnbuffered");
-    }
-#else
     ssize_t n;
     do {
-        checkInterrupt();
         n = ::read(fd, data, len);
     } while (n == -1 && errno == EINTR);
     if (n == -1) {
@@ -156,7 +140,6 @@ size_t FdSource::readUnbuffered(char * data, size_t len)
         _good = false;
         throw EndOfFile(std::string(*endOfFileError));
     }
-#endif
     read += n;
     return n;
 }
@@ -198,119 +181,6 @@ size_t StringSource::read(char * data, size_t len)
     size_t n = s.copy(data, len, pos);
     pos += n;
     return n;
-}
-
-std::unique_ptr<FinishSink> sourceToSink(std::function<void(Source &)> fun)
-{
-    struct SourceToSink : FinishSink
-    {
-        typedef boost::coroutines2::coroutine<bool> coro_t;
-
-        std::function<void(Source &)> fun;
-        std::optional<coro_t::push_type> coro;
-
-        SourceToSink(std::function<void(Source &)> fun)
-            : fun(fun)
-        {
-        }
-
-        std::string_view cur;
-
-        void operator()(std::string_view in) override
-        {
-            if (in.empty())
-                return;
-            cur = in;
-
-            if (!coro) {
-                coro = coro_t::push_type([&](coro_t::pull_type & yield) {
-                    LambdaSource source([&](char * out, size_t out_len) {
-                        if (cur.empty()) {
-                            yield();
-                            if (yield.get())
-                                throw EndOfFile("coroutine has finished");
-                        }
-
-                        size_t n = cur.copy(out, out_len);
-                        cur.remove_prefix(n);
-                        return n;
-                    });
-                    fun(source);
-                });
-            }
-
-            if (!*coro) {
-                unreachable();
-            }
-
-            if (!cur.empty()) {
-                (*coro)(false);
-            }
-        }
-
-        void finish() override
-        {
-            if (coro && *coro)
-                (*coro)(true);
-        }
-    };
-
-    return std::make_unique<SourceToSink>(fun);
-}
-
-std::unique_ptr<Source> sinkToSource(std::function<void(Sink &)> fun, std::function<void()> eof)
-{
-    struct SinkToSource : Source
-    {
-        typedef boost::coroutines2::coroutine<std::string_view> coro_t;
-
-        std::function<void(Sink &)> fun;
-        std::function<void()> eof;
-        std::optional<coro_t::pull_type> coro;
-
-        SinkToSource(std::function<void(Sink &)> fun, std::function<void()> eof)
-            : fun(fun)
-            , eof(eof)
-        {
-        }
-
-        std::string_view cur;
-
-        size_t read(char * data, size_t len) override
-        {
-            bool hasCoro = coro.has_value();
-            if (!hasCoro) {
-                coro = coro_t::pull_type([&](coro_t::push_type & yield) {
-                    LambdaSink sink([&](std::string_view data) {
-                        if (!data.empty()) {
-                            yield(data);
-                        }
-                    });
-                    fun(sink);
-                });
-            }
-
-            if (cur.empty()) {
-                if (hasCoro) {
-                    (*coro)();
-                }
-                if (*coro) {
-                    cur = coro->get();
-                } else {
-                    coro.reset();
-                    eof();
-                    unreachable();
-                }
-            }
-
-            size_t n = cur.copy(data, len);
-            cur.remove_prefix(n);
-
-            return n;
-        }
-    };
-
-    return std::make_unique<SinkToSource>(fun, eof);
 }
 
 void writePadding(size_t len, Sink & sink)
@@ -357,14 +227,6 @@ Sink & operator<<(Sink & sink, const StringSet & s)
 
 Sink & operator<<(Sink & sink, const Error & ex)
 {
-    auto & info = ex.info();
-    sink << "Error" << info.level << "Error" // removed
-         << info.msg.str() << 0              // FIXME: info.errPos
-         << info.traces.size();
-    for (auto & trace : info.traces) {
-        sink << 0; // FIXME: trace.pos
-        sink << trace.hint.str();
-    }
     return sink;
 }
 
@@ -380,85 +242,9 @@ void readPadding(size_t len, Source & source)
     }
 }
 
-size_t readString(char * buf, size_t max, Source & source)
-{
-    auto len = readNum<size_t>(source);
-    if (len > max)
-        throw SerialisationError("string is too long");
-    source(buf, len);
-    readPadding(len, source);
-    return len;
-}
-
-std::string readString(Source & source, size_t max)
-{
-    auto len = readNum<size_t>(source);
-    if (len > max)
-        throw SerialisationError("string is too long");
-    std::string res(len, 0);
-    source(res.data(), len);
-    readPadding(len, source);
-    return res;
-}
-
-Source & operator>>(Source & in, std::string & s)
-{
-    s = readString(in);
-    return in;
-}
-
-template<class T>
-T readStrings(Source & source)
-{
-    auto count = readNum<size_t>(source);
-    T ss;
-    while (count--)
-        ss.insert(ss.end(), readString(source));
-    return ss;
-}
-
-template Paths readStrings(Source & source);
-template PathSet readStrings(Source & source);
-
-Error readError(Source & source)
-{
-    auto type = readString(source);
-    assert(type == "Error");
-    auto level = (Verbosity) readInt(source);
-    [[maybe_unused]] auto name = readString(source); // removed
-    auto msg = readString(source);
-    ErrorInfo info{
-        .level = level,
-        .msg = HintFmt(msg),
-    };
-    auto havePos = readNum<size_t>(source);
-    assert(havePos == 0);
-    auto nrTraces = readNum<size_t>(source);
-    for (size_t i = 0; i < nrTraces; ++i) {
-        havePos = readNum<size_t>(source);
-        assert(havePos == 0);
-        info.traces.push_back(Trace{.hint = HintFmt(readString(source))});
-    }
-    return Error(std::move(info));
-}
-
 void StringSink::operator()(std::string_view data)
 {
     s.append(data);
-}
-
-size_t ChainSource::read(char * data, size_t len)
-{
-    if (useSecond) {
-        return source2.read(data, len);
-    } else {
-        try {
-            return source1.read(data, len);
-        } catch (EndOfFile &) {
-            useSecond = true;
-            return this->read(data, len);
-        }
-    }
 }
 
 } // namespace nix

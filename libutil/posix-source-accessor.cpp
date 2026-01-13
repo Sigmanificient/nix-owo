@@ -1,7 +1,5 @@
 #include "nix/util/posix-source-accessor.hh"
 #include "nix/util/source-path.hh"
-#include "nix/util/signals.hh"
-#include "nix/util/sync.hh"
 
 #include <boost/unordered/concurrent_flat_map.hpp>
 
@@ -64,7 +62,6 @@ void PosixSourceAccessor::readFile(const CanonPath & path, Sink & sink, std::fun
 
     std::array<unsigned char, 64 * 1024> buf;
     while (left) {
-        checkInterrupt();
         ssize_t rd = read(fromDescriptorReadOnly(fd.get()), buf.data(), (size_t) std::min(left, (off_t) buf.size()));
         if (rd == -1) {
             if (errno != EINTR)
@@ -140,7 +137,6 @@ SourceAccessor::DirEntries PosixSourceAccessor::readDirectory(const CanonPath & 
     assertNoSymlinks(path);
     DirEntries res;
     for (auto & entry : DirectoryIterator{makeAbsPath(path)}) {
-        checkInterrupt();
         auto type = [&]() -> std::optional<Type> {
             try {
                 /* WARNING: We are specifically not calling symlink_status()

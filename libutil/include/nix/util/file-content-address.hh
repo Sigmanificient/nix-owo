@@ -37,47 +37,10 @@ enum struct FileSerialisationMethod : uint8_t {
 };
 
 /**
- * Parse a `FileSerialisationMethod` by name. Choice of:
- *
- *  - `flat`: `FileSerialisationMethod::Flat`
- *  - `nar`: `FileSerialisationMethod::NixArchive`
- *
- * Opposite of `renderFileSerialisationMethod`.
- */
-FileSerialisationMethod parseFileSerialisationMethod(std::string_view input);
-
-/**
- * Render a `FileSerialisationMethod` by name.
- *
- * Opposite of `parseFileSerialisationMethod`.
- */
-std::string_view renderFileSerialisationMethod(FileSerialisationMethod method);
-
-/**
  * Dump a serialization of the given file system object.
  */
 void dumpPath(
     const SourcePath & path, Sink & sink, FileSerialisationMethod method, PathFilter & filter = defaultPathFilter);
-
-/**
- * Restore a serialisation of the given file system object.
- *
- * \todo use an arbitrary `FileSystemObjectSink`.
- */
-void restorePath(const Path & path, Source & source, FileSerialisationMethod method, bool startFsync = false);
-
-/**
- * Compute the hash of the given file system object according to the
- * given method.
- *
- * the hash is defined as (in pseudocode):
- *
- * ```
- * hashString(ha, dumpPath(...))
- * ```
- */
-HashResult hashPath(
-    const SourcePath & path, FileSerialisationMethod method, HashAlgorithm ha, PathFilter & filter = defaultPathFilter);
 
 /**
  * An enumeration of the ways we can ingest file system
@@ -106,24 +69,12 @@ enum struct FileIngestionMethod : uint8_t {
     /**
      * Git hashing.
      *
-     * Part of `ExperimentalFeature::GitHashing`.
      *
      * See `file-system-object/content-address.md#serial-git` in the
      * manual.
      */
     Git,
 };
-
-/**
- * Parse a `FileIngestionMethod` by name. Choice of:
- *
- *  - `flat`: `FileIngestionMethod::Flat`
- *  - `nar`: `FileIngestionMethod::NixArchive`
- *  - `git`: `FileIngestionMethod::Git`
- *
- * Opposite of `renderFileIngestionMethod`.
- */
-FileIngestionMethod parseFileIngestionMethod(std::string_view input);
 
 /**
  * Render a `FileIngestionMethod` by name.

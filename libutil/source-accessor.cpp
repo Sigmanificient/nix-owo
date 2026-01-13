@@ -61,13 +61,6 @@ void SourceAccessor::readFile(const CanonPath & path, Sink & sink, std::function
     sink(s);
 }
 
-Hash SourceAccessor::hashPath(const CanonPath & path, PathFilter & filter, HashAlgorithm ha)
-{
-    HashSink sink(ha);
-    dumpPath(path, sink, filter);
-    return sink.finish().hash;
-}
-
 SourceAccessor::Stat SourceAccessor::lstat(const CanonPath & path)
 {
     if (auto st = maybeLstat(path))

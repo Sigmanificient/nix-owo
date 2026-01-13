@@ -166,158 +166,6 @@ void readFile(const Path & path, Sink & sink, bool memory_map = true);
 
 enum struct FsSync { Yes, No };
 
-/**
- * Write a string to a file.
- */
-void writeFile(const Path & path, std::string_view s, mode_t mode = 0666, FsSync sync = FsSync::No);
-
-static inline void
-writeFile(const std::filesystem::path & path, std::string_view s, mode_t mode = 0666, FsSync sync = FsSync::No)
-{
-    return writeFile(path.string(), s, mode, sync);
-}
-
-void writeFile(const Path & path, Source & source, mode_t mode = 0666, FsSync sync = FsSync::No);
-
-static inline void
-writeFile(const std::filesystem::path & path, Source & source, mode_t mode = 0666, FsSync sync = FsSync::No)
-{
-    return writeFile(path.string(), source, mode, sync);
-}
-
-void writeFile(
-    AutoCloseFD & fd, const Path & origPath, std::string_view s, mode_t mode = 0666, FsSync sync = FsSync::No);
-
-/**
- * Flush a path's parent directory to disk.
- */
-void syncParent(const Path & path);
-
-/**
- * Flush a file or entire directory tree to disk.
- */
-void recursiveSync(const Path & path);
-
-/**
- * Delete a path; i.e., in the case of a directory, it is deleted
- * recursively. It's not an error if the path does not exist. The
- * second variant returns the number of bytes and blocks freed.
- */
-void deletePath(const std::filesystem::path & path);
-
-void deletePath(const std::filesystem::path & path, uint64_t & bytesFreed);
-
-/**
- * Create a directory and all its parents, if necessary.
- *
- * Wrapper around `std::filesystem::create_directories` to handle exceptions.
- */
-void createDirs(const std::filesystem::path & path);
-
-/**
- * Create a single directory.
- */
-void createDir(const Path & path, mode_t mode = 0755);
-
-/**
- * Set the access and modification times of the given path, not
- * following symlinks.
- *
- * @param accessedTime Specified in seconds.
- *
- * @param modificationTime Specified in seconds.
- *
- * @param isSymlink Whether the file in question is a symlink. Used for
- * fallback code where we don't have `lutimes` or similar. if
- * `std::optional` is passed, the information will be recomputed if it
- * is needed. Race conditions are possible so be careful!
- */
-void setWriteTime(
-    const std::filesystem::path & path,
-    time_t accessedTime,
-    time_t modificationTime,
-    std::optional<bool> isSymlink = std::nullopt);
-
-/**
- * Convenience wrapper that takes all arguments from the `struct stat`.
- */
-void setWriteTime(const std::filesystem::path & path, const struct stat & st);
-
-/**
- * Create a symlink.
- *
- */
-void createSymlink(const Path & target, const Path & link);
-
-/**
- * Atomically create or replace a symlink.
- */
-void replaceSymlink(const std::filesystem::path & target, const std::filesystem::path & link);
-
-inline void replaceSymlink(const Path & target, const Path & link)
-{
-    return replaceSymlink(std::filesystem::path{target}, std::filesystem::path{link});
-}
-
-/**
- * Similar to 'renameFile', but fallback to a copy+remove if `src` and `dst`
- * are on a different filesystem.
- *
- * Beware that this might not be atomic because of the copy that happens behind
- * the scenes
- */
-void moveFile(const Path & src, const Path & dst);
-
-/**
- * Recursively copy the content of `oldPath` to `newPath`. If `andDelete` is
- * `true`, then also remove `oldPath` (making this equivalent to `moveFile`, but
- * with the guaranty that the destination will be “fresh”, with no stale inode
- * or file descriptor pointing to it).
- */
-void copyFile(const std::filesystem::path & from, const std::filesystem::path & to, bool andDelete);
-
-/**
- * Automatic cleanup of resources.
- */
-class AutoDelete
-{
-    std::filesystem::path _path;
-    bool del;
-    bool recursive;
-public:
-    AutoDelete();
-    AutoDelete(const std::filesystem::path & p, bool recursive = true);
-    AutoDelete(AutoDelete &&) = delete;
-    AutoDelete(const AutoDelete &) = delete;
-    AutoDelete & operator=(AutoDelete &&) = delete;
-    AutoDelete & operator=(const AutoDelete &) = delete;
-    ~AutoDelete();
-
-    void cancel();
-
-    void reset(const std::filesystem::path & p, bool recursive = true);
-
-    const std::filesystem::path & path() const
-    {
-        return _path;
-    }
-
-    PathViewNG view() const
-    {
-        return _path;
-    }
-
-    operator const std::filesystem::path &() const
-    {
-        return _path;
-    }
-
-    operator PathViewNG() const
-    {
-        return _path;
-    }
-};
-
 struct DIRDeleter
 {
     void operator()(DIR * dir) const
@@ -329,33 +177,9 @@ struct DIRDeleter
 typedef std::unique_ptr<DIR, DIRDeleter> AutoCloseDir;
 
 /**
- * Create a temporary directory.
- */
-Path createTempDir(const Path & tmpRoot = "", const Path & prefix = "nix", mode_t mode = 0755);
-
-/**
- * Create a temporary file, returning a file handle and its path.
- */
-std::pair<AutoCloseFD, Path> createTempFile(const Path & prefix = "nix");
-
-/**
  * Return `TMPDIR`, or the default temporary directory if unset or empty.
  */
 Path defaultTempDir();
-
-/**
- * Interpret `exe` as a location in the ambient file system and return
- * whether it resolves to a file that is executable.
- */
-bool isExecutableFileAmbient(const std::filesystem::path & exe);
-
-/**
- * Return temporary path constructed by appending a suffix to a root path.
- *
- * The constructed path looks like `<root><suffix>-<pid>-<unique>`. To create a
- * path nested in a directory, provide a suffix starting with `/`.
- */
-Path makeTempPath(const Path & root, const Path & suffix = ".tmp");
 
 /**
  * Used in various places.
@@ -363,22 +187,6 @@ Path makeTempPath(const Path & root, const Path & suffix = ".tmp");
 typedef std::function<bool(const Path & path)> PathFilter;
 
 extern PathFilter defaultPathFilter;
-
-/**
- * Change permissions of a file only if necessary.
- *
- * @details
- * Skip chmod call if the directory already has the requested permissions.
- * This is to avoid failing when the executing user lacks permissions to change the
- * directory's permissions even if it would be no-op.
- *
- * @param path Path to the file to change the permissions for.
- * @param mode New file mode.
- * @param mask Used for checking if the file already has requested permissions.
- *
- * @return true if permissions changed, false otherwise.
- */
-bool chmodIfNeeded(const std::filesystem::path & path, mode_t mode, mode_t mask = S_IRWXU | S_IRWXG | S_IRWXO);
 
 /**
  * @brief A directory iterator that can be used to iterate over the

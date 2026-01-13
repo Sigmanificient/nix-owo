@@ -31,7 +31,6 @@ CXXFLAGS += -DBLAKE3_DLL -DBLAKE3_USE_TBB
 
 CXXFLAGS += -I libutil/include
 CXXFLAGS += -I libutil/unix/include
-CXXFLAGS += -I libutil/widecharwidth
 CXXFLAGS += -I .
 
 CXXFLAGS += -Wunused-function -Wunused-variable

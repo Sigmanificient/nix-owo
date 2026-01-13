@@ -2,6 +2,7 @@
 ///@file
 
 #include "nix/util/error.hh"
+#include "nix/util/types.hh"
 
 namespace nix {
 

@@ -3,7 +3,6 @@
 
 #include "nix/util/types.hh"
 #include "nix/util/error.hh"
-#include "nix/util/logging.hh"
 #include "nix/util/strings.hh"
 
 #include <functional>
@@ -58,61 +57,6 @@ std::string chomp(std::string_view s);
 std::string trim(std::string_view s, std::string_view whitespace = " \n\r\t");
 
 /**
- * Replace all occurrences of a string inside another string.
- */
-std::string replaceStrings(std::string s, std::string_view from, std::string_view to);
-
-std::string rewriteStrings(std::string s, const StringMap & rewrites);
-
-/**
- * Parse a string into an integer.
- */
-template<class N>
-std::optional<N> string2Int(const std::string_view s);
-
-/**
- * Like string2Int(), but support an optional suffix 'K', 'M', 'G' or
- * 'T' denoting a binary unit prefix.
- */
-template<class N>
-N string2IntWithUnitPrefix(std::string_view s)
-{
-    uint64_t multiplier = 1;
-    if (!s.empty()) {
-        char u = std::toupper(*s.rbegin());
-        if (std::isalpha(u)) {
-            if (u == 'K')
-                multiplier = 1ULL << 10;
-            else if (u == 'M')
-                multiplier = 1ULL << 20;
-            else if (u == 'G')
-                multiplier = 1ULL << 30;
-            else if (u == 'T')
-                multiplier = 1ULL << 40;
-            else
-                throw UsageError("invalid unit specifier '%1%'", u);
-            s.remove_suffix(1);
-        }
-    }
-    if (auto n = string2Int<N>(s))
-        return *n * multiplier;
-    throw UsageError("'%s' is not an integer", s);
-}
-
-/**
- * Pretty-print a byte value, e.g. 12433615056 is rendered as `11.6
- * GiB`. If `align` is set, the number will be right-justified by
- * padding with spaces on the left.
- */
-std::string renderSize(uint64_t value, bool align = false);
-
-/**
- * Parse a string into a float.
- */
-template<class N>
-std::optional<N> string2Float(const std::string_view s);
-
-/**
  * Convert a little-endian integer to host order.
  */
 template<typename T>
@@ -139,16 +83,6 @@ bool hasSuffix(std::string_view s, std::string_view suffix);
  * Convert a string to lower case.
  */
 std::string toLower(std::string s);
-
-/**
- * Escape a string as a shell word.
- *
- * This always adds single quotes, even if escaping is not strictly necessary.
- * So both
- * - `"hello world"` -> `"'hello world'"`, which needs escaping because of the space
- * - `"echo"` -> `"'echo'"`, which doesn't need escaping
- */
-std::string escapeShellArgAlways(const std::string_view s);
 
 /**
  * Exception handling in destructors: print an error message, then
@@ -178,13 +112,6 @@ constexpr char treeConn[] = "├───";
 constexpr char treeLast[] = "└───";
 constexpr char treeLine[] = "│   ";
 constexpr char treeNull[] = "    ";
-
-/**
- * Remove common leading whitespace from the lines in the string
- * 's'. For example, if every line is indented by at least 3 spaces,
- * then we remove 3 spaces from the start of every line.
- */
-std::string stripIndentation(std::string_view s);
 
 /**
  * Get the prefix of 's' up to and excluding the next line break (LF
@@ -318,8 +245,6 @@ struct overloaded : Ts...
 };
 template<class... Ts>
 overloaded(Ts...) -> overloaded<Ts...>;
-
-std::string showBytes(uint64_t bytes);
 
 /**
  * Provide an addition operator between strings and string_views

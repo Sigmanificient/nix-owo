@@ -46,7 +46,7 @@ std::string SourcePath::readLink() const
 
 void SourcePath::dumpPath(Sink & sink, PathFilter & filter) const
 {
-    return accessor->dumpPath(path, sink, filter);
+    // return accessor->dumpPath(path, sink, filter);
 }
 
 std::optional<std::filesystem::path> SourcePath::getPhysicalPath() const

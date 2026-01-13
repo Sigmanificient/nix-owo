@@ -1,5 +1,4 @@
 #include "nix/util/file-system.hh"
-#include "nix/util/signals.hh"
 #include "nix/util/finally.hh"
 #include "nix/util/serialise.hh"
 
@@ -7,7 +6,6 @@
 #include <unistd.h>
 #include <poll.h>
 
-#include "util-config-private.hh"
 #include "util-unix-config-private.hh"
 
 namespace nix {
@@ -41,7 +39,6 @@ std::string readFile(int fd)
 void readFull(int fd, char * buf, size_t count)
 {
     while (count) {
-        checkInterrupt();
         ssize_t res = read(fd, buf, count);
         if (res == -1) {
             switch (errno) {
@@ -63,8 +60,6 @@ void readFull(int fd, char * buf, size_t count)
 void writeFull(int fd, std::string_view s, bool allowInterrupts)
 {
     while (!s.empty()) {
-        if (allowInterrupts)
-            checkInterrupt();
         ssize_t res = write(fd, s.data(), s.size());
         if (res == -1) {
             switch (errno) {
@@ -85,7 +80,6 @@ std::string readLine(int fd, bool eofOk)
 {
     std::string s;
     while (1) {
-        checkInterrupt();
         char ch;
         // FIXME: inefficient
         ssize_t rd = read(fd, &ch, 1);
@@ -133,7 +127,6 @@ void drainFD(int fd, Sink & sink, bool block)
 
     std::vector<unsigned char> buf(64 * 1024);
     while (1) {
-        checkInterrupt();
         ssize_t rd = read(fd, buf.data(), buf.size());
         if (rd == -1) {
             if (!block && (errno == EAGAIN || errno == EWOULDBLOCK))
@@ -166,55 +159,6 @@ void Pipe::create()
 }
 
 //////////////////////////////////////////////////////////////////////
-
-#if defined(__linux__) || defined(__FreeBSD__)
-static int unix_close_range(unsigned int first, unsigned int last, int flags)
-{
-#  if !HAVE_CLOSE_RANGE
-    return syscall(SYS_close_range, first, last, (unsigned int) flags);
-#  else
-    return close_range(first, last, flags);
-#  endif
-}
-#endif
-
-void unix::closeExtraFDs()
-{
-    constexpr int MAX_KEPT_FD = 2;
-    static_assert(std::max({STDIN_FILENO, STDOUT_FILENO, STDERR_FILENO}) == MAX_KEPT_FD);
-
-#if defined(__linux__) || defined(__FreeBSD__)
-    // first try to close_range everything we don't care about. if this
-    // returns an error with these parameters we're running on a kernel
-    // that does not implement close_range (i.e. pre 5.9) and fall back
-    // to the old method. we should remove that though, in some future.
-    if (unix_close_range(MAX_KEPT_FD + 1, ~0U, 0) == 0) {
-        return;
-    }
-#endif
-
-#ifdef __linux__
-    try {
-        for (auto & s : DirectoryIterator{"/proc/self/fd"}) {
-            checkInterrupt();
-            auto fd = std::stoi(s.path().filename());
-            if (fd > MAX_KEPT_FD) {
-                debug("closing leaked FD %d", fd);
-                close(fd);
-            }
-        }
-        return;
-    } catch (SysError &) {
-    }
-#endif
-
-    int maxFD = 0;
-#if HAVE_SYSCONF
-    maxFD = sysconf(_SC_OPEN_MAX);
-#endif
-    for (int fd = MAX_KEPT_FD + 1; fd < maxFD; ++fd)
-        close(fd); /* ignore result */
-}
 
 void unix::closeOnExec(int fd)
 {

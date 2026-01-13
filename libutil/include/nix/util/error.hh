@@ -12,10 +12,8 @@
  *
  * ErrorInfo structs are sent to the logger as part of an exception, or directly with the
  * logError or logWarning macros.
- * See libutil/tests/logging.cc for usage examples.
  */
 
-#include "nix/util/suggestions.hh"
 #include "nix/util/fmt.hh"
 
 #include <cstring>
@@ -42,17 +40,7 @@ struct LinesOfCode
     std::optional<std::string> nextLineOfCode;
 };
 
-/* NOTE: position.hh recursively depends on source-path.hh -> source-accessor.hh
-   -> hash.hh -> configuration.hh -> experimental-features.hh -> error.hh -> Pos.
-   There are other such cycles.
-   Thus, Pos has to be an incomplete type in this header. But since ErrorInfo/Trace
-   have to refer to Pos, they have to use pointer indirection via std::shared_ptr
-   to break the recursive header dependency.
-   FIXME: Untangle this mess. Should there be AbstractPos as there used to be before
-   4feb7d9f71? */
 struct Pos;
-
-void printCodeLines(std::ostream & out, const std::string & prefix, const Pos & errPos, const LinesOfCode & loc);
 
 /**
  * When a stack frame is printed.
@@ -92,12 +80,8 @@ struct ErrorInfo
      */
     unsigned int status = 1;
 
-    Suggestions suggestions;
-
     static std::optional<std::string> programName;
 };
-
-std::ostream & showErrorInfo(std::ostream & out, const ErrorInfo & einfo, bool showTrace);
 
 /**
  * BaseError should generally not be caught, as it has Interrupted as
@@ -134,12 +118,6 @@ public:
     {
     }
 
-    template<typename... Args>
-    BaseError(const Suggestions & sug, const Args &... args)
-        : err{.level = lvlError, .msg = HintFmt(args...), .suggestions = sug}
-    {
-    }
-
     BaseError(HintFmt hint)
         : err{.level = lvlError, .msg = hint}
     {
@@ -153,28 +131,6 @@ public:
     BaseError(const ErrorInfo & e)
         : err(e)
     {
-    }
-
-    /** The error message without "error: " prefixed to it. */
-    std::string message()
-    {
-        return err.msg.str();
-    }
-
-    const char * what() const noexcept override
-    {
-        return calcWhat().c_str();
-    }
-
-    const std::string & msg() const
-    {
-        return calcWhat();
-    }
-
-    const ErrorInfo & info() const
-    {
-        calcWhat();
-        return err;
     }
 
     void withExitStatus(unsigned int status)
@@ -274,42 +230,17 @@ public:
     }
 };
 
-#ifdef _WIN32
-namespace windows {
-class WinError;
-}
-#endif
-
 /**
  * Convenience alias for when we use a `errno`-based error handling
  * function on Unix, and `GetLastError()`-based error handling on on
  * Windows.
  */
-using NativeSysError =
-#ifdef _WIN32
-    windows::WinError
-#else
-    SysError
-#endif
-    ;
-
-/**
- * Throw an exception for the purpose of checking that exception
- * handling works; see 'initLibUtil()'.
- */
-void throwExceptionSelfCheck();
+using NativeSysError = SysError;
 
 /**
  * Print a message and std::terminate().
  */
 [[noreturn]]
 void panic(std::string_view msg);
-
-/**
- * Print a basic error message with source position and std::terminate().
- *
- * @note: This assumes that the logger is operational
- */
-[[gnu::noinline, gnu::cold, noreturn]] void unreachable(std::source_location loc = std::source_location::current());
 
 } // namespace nix

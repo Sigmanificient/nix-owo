@@ -20,22 +20,23 @@
       default = pkgs.mkShell {
         hardeningDisable = ["fortify"];
 
+        env.FILTERPATH_SOURCE_TEST = pkgs.filterpath.src;
+
+        inputsFrom = [
+          self.packages.${pkgs.stdenv.hostPlatform.system}.nix-hash
+        ];
+
         packages = with pkgs; [
           clang-tools
           compiledb
-          pkg-config
-        ] ++ [
-          (pkgs.callPackage ./boost.nix { }).dev
-          brotli.dev
-          libarchive
-          libblake3
-          libcpuid
-          libsodium
-          nlohmann_json
-          openssl
         ];
       };
     });
+
+    packages = forAllSystems (pkgs: rec {
+      boost-custom = pkgs.callPackage ./boost.nix { };
+
+      nix-hash = pkgs.callPackage ./default.nix { inherit boost-custom; };
+    });
   };
 }
-

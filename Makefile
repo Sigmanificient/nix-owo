@@ -31,8 +31,6 @@ CXXFLAGS += -DBLAKE3_DLL -DBLAKE3_USE_TBB
 
 CXXFLAGS += -I libutil/include
 CXXFLAGS += -I libutil/unix/include
-CXXFLAGS += -I libutil/linux/include
-CXXFLAGS += -I libutil/windows/include
 CXXFLAGS += -I libutil/widecharwidth
 CXXFLAGS += -I .
 
@@ -52,7 +50,6 @@ LDLIBS += -lboost_context -lboost_container -lboost_coroutine -lboost_url -lboos
 
 VPATH += src
 SRC := $(shell find libutil -maxdepth 1 -name "*.cpp")
-SRC += $(shell find libutil/linux -maxdepth 1 -name "*.cpp")
 SRC += $(shell find libutil/unix -maxdepth 1 -name "*.cpp")
 
 vpath %.cpp $(VPATH)

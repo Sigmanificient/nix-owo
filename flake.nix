@@ -21,7 +21,7 @@
         hardeningDisable = ["fortify"];
 
         inputsFrom = [
-          pkgs.nix.libs.nix-util
+          self.packages.${pkgs.stdenv.hostPlatform.system}.nix-hash
         ];
 
         packages = with pkgs; [
@@ -29,6 +29,10 @@
           compiledb
         ];
       };
+    });
+
+    packages = forAllSystems (pkgs: {
+      nix-hash = pkgs.callPackage ./default.nix { };
     });
   };
 }

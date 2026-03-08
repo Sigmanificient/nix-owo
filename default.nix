@@ -24,7 +24,7 @@
     runHook preInstall
 
     mkdir -p $out/bin
-    cp nix-hash $out/bin
+    cp nix-hash nix-owo $out/bin
     cp ${test-nix-hash-sh} $out/bin/test-nix-hash.sh
 
     runHook postInstall

@@ -7,10 +7,18 @@ project(
 
 nix_util_dep = dependency('nix-util', method: 'pkg-config')
 
-sources = files(
+hash_sources = files(
     'main.cpp',
 )
 
-executable('nix-hash', sources, dependencies : [
+owo_sources = files(
+    'owo.cpp'
+)
+
+executable('nix-hash', hash_sources, dependencies : [
+    nix_util_dep
+])
+
+executable('nix-owo', owo_sources, dependencies : [
     nix_util_dep
 ])

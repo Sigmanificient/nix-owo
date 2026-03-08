@@ -1,5 +1,7 @@
-#!/usr/bin/env bash
+#!/bin/sh
 set -euo pipefail
+
+nix_hash_path="$1"
 
 run_test () {
   name="$1"
@@ -9,7 +11,7 @@ run_test () {
   echo "Testing $name"
   start=$(date +%s%N)
 
-  result="$(./nix-hash "$path" 2>/dev/null)"
+  result="$($nix_hash_path "$path" 2>/dev/null)"
   if [ "$result" != "$expected" ]; then
     echo "Mismatch on iteration $i"
     echo "expected: $expected"

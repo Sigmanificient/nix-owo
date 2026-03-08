@@ -5,6 +5,7 @@
   pkg-config,
   meson,
   ninja,
+  test-nix-hash-sh,
 }: stdenv.mkDerivation {
   name = "nix-hash";
 
@@ -24,6 +25,7 @@
 
     mkdir -p $out/bin
     cp nix-hash $out/bin
+    cp ${test-nix-hash-sh} $out/bin/test-nix-hash.sh
 
     runHook postInstall
   '';

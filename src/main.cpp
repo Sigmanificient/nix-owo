@@ -1,8 +1,8 @@
 #include <iostream>
 
-#include "nix/util/base-n.hh"
-#include "nix/util/hash.hh"
-#include "nix/util/posix-source-accessor.hh"
+#include <nix/util/base-n.hh>
+#include <nix/util/hash.hh>
+#include <nix/util/posix-source-accessor.hh>
 
 using namespace nix;
 
@@ -23,7 +23,7 @@ static void SAdumpContents(SourceAccessor& sa, const CanonPath & path, Sink & si
     writePadding(size, sink);
 }
 
-void SAdump(SourceAccessor& sa, const CanonPath & path, Sink & sink)
+static void SAdump(SourceAccessor& sa, const CanonPath & path, Sink & sink)
 {
     auto st = sa.lstat(path);
 
@@ -79,6 +79,7 @@ static std::string hash_to_string(Hash hash)
  
     return s;
 }
+
 
 int main(int argc, char **argv)
 {

@@ -1,32 +1,22 @@
 {
   boost-custom,
   stdenv,
-  brotli,
-  libarchive,
-  libblake3,
-  libcpuid,
-  libsodium,
-  nlohmann_json,
-  openssl,
+  nix,
   pkg-config,
+  meson,
+  ninja,
 }: stdenv.mkDerivation {
   name = "nix-hash";
 
-  src = ./.;
+  src = ./src;
 
   enableParallelBuilding = true;
 
-  nativeBuildInputs = [ pkg-config ];
+  nativeBuildInputs = [ meson ninja pkg-config ];
 
   buildInputs = [
     boost-custom
-    brotli.dev
-    libarchive
-    libblake3
-    libcpuid
-    libsodium
-    nlohmann_json
-    openssl
+    nix.libs.nix-util
   ];
 
   installPhase = ''

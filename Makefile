@@ -1,7 +1,8 @@
 .POSIX:
 
 BUILD_DIR := .build
-OUT := nix-hash
+OUT_NIX_HASH := nix-hash
+OUT_NIX_OWO := nix-owo
 
 CXX = g++
 
@@ -40,16 +41,21 @@ vpath %.cpp $(VPATH)
 OBJ := $(SRC:%.cpp=$(BUILD_DIR)/%.o)
 
 .PHONY: all
-all: $(OUT)
+all: $(OUT_NIX_HASH) $(OUT_NIX_OWO)
 
 $(BUILD_DIR)/%.o: src/%.cpp
 	@ mkdir -p $(dir $@)
 	$Q $(CXX) $(CXXFLAGS) -o $@ -c $<
 	@ $(LOG_TIME) "CXX $(C_PURPLE) $(notdir $@) $(C_RESET)"
 
-$(OUT): $(OBJ)
+$(OUT_NIX_HASH): $(OBJ)
 	@ mkdir -p $(dir $@)
 	$Q $(CXX) -o $@ src/main.cpp src/utils.cpp $(OBJ) $(CXXFLAGS) $(LDLIBS) $(LDFLAGS)
+	@ $(LOG_TIME) "LD $(C_GREEN) $@ $(C_RESET)"
+
+$(OUT_NIX_OWO): $(OBJ)
+	@ mkdir -p $(dir $@)
+	$Q $(CXX) -o $@ src/owo.cpp src/utils.cpp $(OBJ) $(CXXFLAGS) $(LDLIBS) $(LDFLAGS)
 	@ $(LOG_TIME) "LD $(C_GREEN) $@ $(C_RESET)"
 
 .PHONY: clean
@@ -59,7 +65,7 @@ clean:
 
 .PHONY: fclean
 fclean: clean
-	$(RM) -r $(BUILD_DIR) $(OUT)
+	$(RM) -r $(BUILD_DIR) $(OUT_NIX_HASH) $(OUT_NIX_OWO)
 	@ $(LOG_TIME) $@
 
 .PHONY: re

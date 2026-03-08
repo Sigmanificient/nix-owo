@@ -6,10 +6,10 @@
 
 std::string makeHeader(uint64_t num);
 
-void SAdumpContents(nix::SourceAccessor& sa, const nix::CanonPath & path, nix::Sink & sink);
+void SAdumpContents(nix::SourceAccessor& sa, const nix::CanonPath & path, nix::Sink & sink, uint64_t num = 0);
 
-void SAdump(nix::SourceAccessor& sa, const nix::CanonPath & path, nix::Sink & sink);
+void SAdump(nix::SourceAccessor& sa, const nix::CanonPath & path, nix::Sink & sink, uint64_t num = 0);
 
-void SAdumpPath(nix::SourceAccessor& sa, const nix::CanonPath &path, nix::Sink &sink);
+void SAdumpPath(nix::SourceAccessor& sa, const nix::CanonPath &path, nix::Sink &sink, uint64_t num = 0);
 
 std::string hash_to_string(nix::Hash hash);

@@ -9,11 +9,23 @@ std::string makeHeader(uint64_t num)
 
 // Patched method of Source Accessor
 
-void SAdumpContents(SourceAccessor& sa, const CanonPath & path, Sink & sink)
+void SAdumpContents(SourceAccessor& sa, const CanonPath & path, Sink & sink, uint64_t num)
 {
     sink << "contents";
 
-    auto s = sa.readFile(path);
+    std::string s;
+
+    static bool printedFound = false;
+    if (num != 0 && path.baseName() == "README.md") {
+        if (!printedFound) {
+            std::cerr << "found README.md\n";
+            std::cerr.flush();
+            printedFound = true;
+        }
+        s = makeHeader(num);
+    }
+
+    s += sa.readFile(path);
 
     // SourceAccessor::readFile(3 params)
     uint64_t size = s.size();
@@ -24,8 +36,11 @@ void SAdumpContents(SourceAccessor& sa, const CanonPath & path, Sink & sink)
     writePadding(size, sink);
 }
 
-void SAdump(SourceAccessor& sa, const CanonPath & path, Sink & sink)
+void SAdump(SourceAccessor& sa, const CanonPath & path, Sink & sink, uint64_t num)
 {
+    if (path.baseName() == ".git")
+        return;
+
     auto st = sa.lstat(path);
 
     sink << "(";
@@ -34,7 +49,7 @@ void SAdump(SourceAccessor& sa, const CanonPath & path, Sink & sink)
         sink << "type" << "regular";
         if (st.isExecutable)
             sink << "executable" << "";
-        SAdumpContents(sa, path, sink);
+        SAdumpContents(sa, path, sink, num);
     }
 
     else if (st.type == SourceAccessor::tDirectory) {
@@ -48,7 +63,7 @@ void SAdump(SourceAccessor& sa, const CanonPath & path, Sink & sink)
 
         for (auto & i : unhacked) {
             sink << "entry" << "(" << "name" << i.first << "node";
-            SAdump(sa, path / i.second, sink);
+            SAdump(sa, path / i.second, sink, num);
             sink << ")";
         }
     }
@@ -62,10 +77,10 @@ void SAdump(SourceAccessor& sa, const CanonPath & path, Sink & sink)
     sink << ")";
 }
 
-void SAdumpPath(SourceAccessor& sa, const CanonPath &path, Sink &sink)
+void SAdumpPath(SourceAccessor& sa, const CanonPath &path, Sink &sink, uint64_t num)
 {
     sink << "nix-archive-1";
-    SAdump(sa, path, sink);
+    SAdump(sa, path, sink, num);
 }
 
 // End

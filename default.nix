@@ -20,7 +20,7 @@
     runHook preInstall
 
     mkdir -p $out/bin
-    cp nix-hash $out/bin
+    cp nix-hash nix-owo $out/bin
 
     runHook postInstall
   '';

@@ -21,7 +21,7 @@ static void SAdumpContents(SourceAccessor& sa, const CanonPath & path, Sink & si
     writePadding(size, sink);
 }
 
-void SAdump(SourceAccessor& sa, const CanonPath & path, Sink & sink)
+static void SAdump(SourceAccessor& sa, const CanonPath & path, Sink & sink)
 {
     auto st = sa.lstat(path);
 

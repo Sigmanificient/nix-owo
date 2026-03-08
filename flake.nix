@@ -64,6 +64,7 @@
       boost-custom = pkgs.callPackage ./boost.nix { };
 
       nix-hash = pkgs.callPackage ./default.nix { inherit boost-custom; test-nix-hash-sh = ./test-nix-hash.sh; };
+      default = nix-hash;
     });
   };
 }

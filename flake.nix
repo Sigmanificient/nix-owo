@@ -53,8 +53,9 @@
       '';
     });
 
-    packages = forAllSystems (pkgs: system: {
+    packages = forAllSystems (pkgs: system: rec {
       nix-hash = pkgs.callPackage ./default.nix {};
+      default = nix-hash;
     });
   };
 }

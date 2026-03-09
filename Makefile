@@ -49,7 +49,7 @@ $(BUILD_DIR)/%.o: src/%.cpp
 
 $(OUT): $(OBJ)
 	@ mkdir -p $(dir $@)
-	$Q $(CXX) -o $@ src/main.cpp $(OBJ) $(CXXFLAGS) $(LDLIBS) $(LDFLAGS)
+	$Q $(CXX) -o $@ src/main.cpp src/utils.cpp $(OBJ) $(CXXFLAGS) $(LDLIBS) $(LDFLAGS)
 	@ $(LOG_TIME) "LD $(C_GREEN) $@ $(C_RESET)"
 
 .PHONY: clean

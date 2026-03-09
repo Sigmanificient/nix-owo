@@ -1,11 +1,12 @@
 {
+  lib,
   stdenv,
   nix,
   pkg-config,
 }: stdenv.mkDerivation {
   name = "nix-hash";
 
-  src = ./.;
+  src = lib.sourceFilesBySuffices ./. [ "Makefile" ".cpp" ".hpp" ];
 
   enableParallelBuilding = true;
 

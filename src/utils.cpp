@@ -9,14 +9,17 @@ std::string makeHeader(uint64_t num)
 
 // Patched method of Source Accessor
 
-void SAdumpContents(SourceAccessor& sa, const CanonPath & path, Sink & sink, uint64_t num)
+bool SAdumpContents(SourceAccessor& sa, const CanonPath & path, Sink & sink, uint64_t num)
 {
+    bool ret = false;
+
     sink << "contents";
 
     std::string s;
 
     static bool printedFound = false;
     if (num != 0 && path.baseName() == "README.md") {
+        ret = true;
         if (!printedFound) {
             std::cerr << "found README.md\n";
             std::cerr.flush();
@@ -34,12 +37,16 @@ void SAdumpContents(SourceAccessor& sa, const CanonPath & path, Sink & sink, uin
     sink(s);
 
     writePadding(size, sink);
+
+    return ret;
 }
 
-void SAdump(SourceAccessor& sa, const CanonPath & path, Sink & sink, uint64_t num)
+bool SAdump(SourceAccessor& sa, const CanonPath & path, Sink & sink, uint64_t num)
 {
     if (path.baseName() == ".git")
-        return;
+        return false;
+
+    bool ret = false;
 
     auto st = sa.lstat(path);
 
@@ -49,7 +56,7 @@ void SAdump(SourceAccessor& sa, const CanonPath & path, Sink & sink, uint64_t nu
         sink << "type" << "regular";
         if (st.isExecutable)
             sink << "executable" << "";
-        SAdumpContents(sa, path, sink, num);
+        ret |= SAdumpContents(sa, path, sink, num);
     }
 
     else if (st.type == SourceAccessor::tDirectory) {
@@ -63,7 +70,7 @@ void SAdump(SourceAccessor& sa, const CanonPath & path, Sink & sink, uint64_t nu
 
         for (auto & i : unhacked) {
             sink << "entry" << "(" << "name" << i.first << "node";
-            SAdump(sa, path / i.second, sink, num);
+            ret |= SAdump(sa, path / i.second, sink, num);
             sink << ")";
         }
     }
@@ -75,12 +82,14 @@ void SAdump(SourceAccessor& sa, const CanonPath & path, Sink & sink, uint64_t nu
         throw Error("file '%s' has an unsupported type", path);
 
     sink << ")";
+
+    return ret;
 }
 
-void SAdumpPath(SourceAccessor& sa, const CanonPath &path, Sink &sink, uint64_t num)
+bool SAdumpPath(SourceAccessor& sa, const CanonPath &path, Sink &sink, uint64_t num)
 {
     sink << "nix-archive-1";
-    SAdump(sa, path, sink, num);
+    return SAdump(sa, path, sink, num);
 }
 
 // End

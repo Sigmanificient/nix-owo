@@ -36,7 +36,3 @@ export -f run_owo
 
 parallel --halt now,success=1 run_owo ~/your-project 1000000 ./result/bin/nix-owo ::: $(seq 1 $(nproc))
 ```
-
-## Known Limitations
-
-It currently does not work well with projects containing multiple README.md files. The computed prefix would need to be inserted at the top of every README.md file in the source tree rather than just the top-level one.

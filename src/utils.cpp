@@ -70,7 +70,8 @@ bool SAdump(SourceAccessor& sa, const CanonPath & path, Sink & sink, uint64_t nu
 
         for (auto & i : unhacked) {
             sink << "entry" << "(" << "name" << i.first << "node";
-            ret |= SAdump(sa, path / i.second, sink, num);
+            // Pass 0 as num if we've already found README.md, so nested READMEs don't get processed
+            ret |= SAdump(sa, path / i.second, sink, ret ? 0 : num);
             sink << ")";
         }
     }

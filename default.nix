@@ -17,16 +17,13 @@ stdenv.mkDerivation {
 
   nativeBuildInputs = [pkg-config];
 
-  buildInputs = [
-    nix.libs.nix-util
-  ];
+  buildInputs = [nix.libs.nix-util];
 
-  installPhase = ''
-    runHook preInstall
+  env.PREFIX = placeholder "out";
 
-    mkdir -p $out/bin
-    cp nix-sri-hash nix-owo $out/bin
-
-    runHook postInstall
-  '';
+  meta = {
+    description = "Customize your nix (SRI) hashes";
+    maintainers = with lib.maintainers; [sigmanificient];
+    platforms = lib.platforms.unix;
+  };
 }

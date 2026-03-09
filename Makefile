@@ -1,5 +1,7 @@
 .POSIX:
 
+BINDIR ?= $(PREFIX)/bin
+
 BUILD_DIR := .build
 
 OUT_NIX_HASH := nix-sri-hash
@@ -7,22 +9,8 @@ OUT_NIX_OWO := nix-owo
 
 CXX = g++
 
-CXXFLAGS += -fdiagnostics-color=always
-CXXFLAGS += -D_GLIBCXX_ASSERTIONS=1
-CXXFLAGS += -D_FILE_OFFSET_BITS=64
-CXXFLAGS += -Wall
-CXXFLAGS += -Winvalid-pch
-CXXFLAGS += -std=c++23 -O0 -g
-CXXFLAGS += -Wdeprecated-copy
-CXXFLAGS += -Werror=suggest-override
-CXXFLAGS += -Werror=switch
-CXXFLAGS += -Werror=switch-enum
-CXXFLAGS += -Werror=undef
-CXXFLAGS += -Werror=unused-result
-CXXFLAGS += -Werror=sign-compare
-CXXFLAGS += -Wignored-qualifiers
-CXXFLAGS += -Wimplicit-fallthrough
-CXXFLAGS += -Wno-deprecated-declarations
+CXXFLAGS += -std=c++23 -O2
+CXXFLAGS += -Wall -Wextra
 CXXFLAGS += -fPIC
 
 CXXFLAGS += -I libutil/include
@@ -36,10 +24,10 @@ LIBS += nix-util
 LDLIBS += $(shell pkg-config --libs $(LIBS))
 
 VPATH += src
-
 vpath %.cpp $(VPATH)
 
-OBJ := $(SRC:%.cpp=$(BUILD_DIR)/%.o)
+SRC += utils.cpp
+OBJ = $(SRC:%.cpp=$(BUILD_DIR)/%.o)
 
 .PHONY: all
 all: $(OUT_NIX_HASH) $(OUT_NIX_OWO)
@@ -49,14 +37,14 @@ $(BUILD_DIR)/%.o: src/%.cpp
 	$Q $(CXX) $(CXXFLAGS) -o $@ -c $<
 	@ $(LOG_TIME) "CXX $(C_PURPLE) $(notdir $@) $(C_RESET)"
 
-$(OUT_NIX_HASH): $(OBJ)
+$(OUT_NIX_HASH): $(OBJ) $(BUILD_DIR)/nix-sri-hash.o
 	@ mkdir -p $(dir $@)
-	$Q $(CXX) -o $@ src/main.cpp src/utils.cpp $(OBJ) $(CXXFLAGS) $(LDLIBS) $(LDFLAGS)
+	$Q $(CXX) -o $@ $^ $(CXXFLAGS) $(LDLIBS) $(LDFLAGS)
 	@ $(LOG_TIME) "LD $(C_GREEN) $@ $(C_RESET)"
 
-$(OUT_NIX_OWO): $(OBJ)
+$(OUT_NIX_OWO): $(OBJ) $(BUILD_DIR)/nix-owo.o
 	@ mkdir -p $(dir $@)
-	$Q $(CXX) -o $@ src/owo.cpp src/utils.cpp $(OBJ) $(CXXFLAGS) $(LDLIBS) $(LDFLAGS)
+	$Q $(CXX) -o $@ $^ $(CXXFLAGS) $(LDLIBS) $(LDFLAGS)
 	@ $(LOG_TIME) "LD $(C_GREEN) $@ $(C_RESET)"
 
 .PHONY: clean
@@ -72,6 +60,16 @@ fclean: clean
 .PHONY: re
 .NOTPARALLEL: re
 re: fclean all
+
+PREFIX ?= /usr/bin
+
+.PHONY: check
+check:
+	./test-nix-hash.sh ./nix-sri-hash
+
+.PHONY: install
+install:
+	install -Dm0755 nix-owo -t $(BINDIR)
 
 ifneq ($(shell command -v tput),)
   ifneq ($(shell tput colors),0)

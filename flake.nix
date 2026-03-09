@@ -20,18 +20,13 @@
       default = pkgs.mkShell {
         hardeningDisable = ["fortify"];
 
+        inputsFrom = [
+          pkgs.nix.libs.nix-util
+        ];
+
         packages = with pkgs; [
           clang-tools
           compiledb
-          pkg-config
-        ] ++ [
-          brotli.dev
-          libarchive
-          libblake3
-          libcpuid
-          libsodium
-          nlohmann_json
-          openssl
         ];
       };
     });

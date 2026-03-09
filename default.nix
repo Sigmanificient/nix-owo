@@ -5,7 +5,7 @@
 }: stdenv.mkDerivation {
   name = "nix-hash";
 
-  src = ./.;
+  src = ./src;
 
   enableParallelBuilding = true;
 

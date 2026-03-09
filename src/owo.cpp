@@ -20,23 +20,26 @@ int main(int argc, char **argv)
 
     for (uint64_t i = start; i < end; ++i) {
         HashSink sink(HashAlgorithm::SHA256);
-        bool foundReadme = SAdumpPath(root, CanonPath{abspath.relative_path().string()}, sink, i);
-        if (!foundReadme) {
-            std::cerr << "Could not find README.md" << std::endl;
+        bool found_readme = SAdumpPath(root, CanonPath{abspath.relative_path().string()}, sink, i);
+
+        if (!found_readme) {
+            std::cerr << "Could not find README.md" << '\n';
             return 1;
         }
+
         HashResult result = sink.finish();
         auto hash = result.hash.to_string(nix::HashFormat::SRI, true);
+
         if (hash[47] == '0' && hash[48] == 'w' && hash[49] == '0') {
-            std::cerr << std::endl;
-            std::cout << hash << std::endl;;
+            std::cerr << '\n';
+            std::cout << hash << '\n';
             std::cout << makeHeader(i);
-            return 0;
+            return EXIT_SUCCESS;
         }
         if (i % 100 == 0)
             std::cerr << ".";
     }
 
-    std::cerr << std::endl << "Unable to find match" << std::endl;
-    return 1;
+    std::cerr << "\nUnable to find match\n";
+    return EXIT_FAILURE;
 }

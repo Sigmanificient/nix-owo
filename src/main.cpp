@@ -25,10 +25,10 @@ int main(int argc, char **argv)
 
         std::cout << result.hash.to_string(HashFormat::SRI, true) << "\n";
 
-        return 0;
+        return EXIT_SUCCESS;
     }
     catch (const Error & e) {
         std::cerr << "error: " << e.what() << "\n";
-        return 1;
+        return EXIT_FAILURE;
     }
 }

@@ -17,13 +17,13 @@ bool SAdumpContents(SourceAccessor& sa, const CanonPath & path, Sink & sink, uin
 
     std::string s;
 
-    static bool printedFound = false;
+    static bool printed_found = false;
     if (num != 0 && path.baseName() == "README.md") {
         ret = true;
-        if (!printedFound) {
-            std::cerr << "found README.md at " << path << std::endl;
+        if (!printed_found) {
+            std::cerr << "found README.md at " << path << '\n';
             std::cerr.flush();
-            printedFound = true;
+            printed_found = true;
         }
         s = makeHeader(num);
     }

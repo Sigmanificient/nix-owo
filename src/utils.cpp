@@ -21,7 +21,7 @@ bool SAdumpContents(SourceAccessor& sa, const CanonPath & path, Sink & sink, uin
     if (num != 0 && path.baseName() == "README.md") {
         ret = true;
         if (!printedFound) {
-            std::cerr << "found README.md\n";
+            std::cerr << "found README.md at " << path << std::endl;
             std::cerr.flush();
             printedFound = true;
         }

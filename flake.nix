@@ -34,7 +34,7 @@
         env = mkEnv pkgs;
 
         inputsFrom = [
-          self.packages.${pkgs.stdenv.hostPlatform.system}.nix-hash
+          self.packages.${system}.nix-owo
         ];
 
         packages = with pkgs; [
@@ -45,17 +45,19 @@
     });
 
     checks = forAllSystems (pkgs: system: {
-      test = pkgs.runCommand "test" {
-        env = mkEnv pkgs;
-      } ''
-        ${./test-nix-hash.sh} ${self.packages.${system}.nix-hash}/bin/nix-hash
-        touch $out
-      '';
+      test =
+        pkgs.runCommand "test" {
+          env = mkEnv pkgs;
+        } ''
+          ${./test-nix-hash.sh} ${lib.getExe' self.packages.${system}.nix-owo "nix-sri-hash"}
+          touch $out
+        '';
     });
 
     packages = forAllSystems (pkgs: system: rec {
-      nix-hash = pkgs.callPackage ./default.nix {};
-      default = nix-hash;
+      nix-owo = pkgs.callPackage ./default.nix {};
+
+      default = nix-owo;
     });
   };
 }

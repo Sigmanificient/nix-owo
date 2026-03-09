@@ -1,7 +1,8 @@
 .POSIX:
 
 BUILD_DIR := .build
-OUT_NIX_HASH := nix-hash
+
+OUT_NIX_HASH := nix-sri-hash
 OUT_NIX_OWO := nix-owo
 
 CXX = g++

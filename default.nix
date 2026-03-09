@@ -25,7 +25,7 @@ stdenv.mkDerivation {
     runHook preInstall
 
     mkdir -p $out/bin
-    cp nix-hash nix-owo $out/bin
+    cp nix-sri-hash nix-owo $out/bin
 
     runHook postInstall
   '';

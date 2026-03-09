@@ -4,35 +4,14 @@ Brute force Nix source hashes to find one that ends in `0w0`. Point it at a clea
 
 ## Usage
 
-`nix-owo [TARGET = .] [START = 1] [END = UINT64_MAX]`
+`nix-owo [TARGET = .] [TOTAL = 1] [RANK = 1]`
 
 - `TARGET` is the path to the source tree whose hash you want to brute force.
-- `START` is the starting number. This should not be 0 as 0 is used for internal testing purposes.
-- `END` is the ending number.
+- `TOTAL` is the number of processes you are running. Used to compute the starting and ending number for searching.
+- `RANK` is a number uniquely identifying this process from parallel processes. Used to compute the starting and ending number for searching. Should be in the range 1...TOTAL.
 
 ## Usage with GNU Parallel
 
 ```bash
-function gen_args() {
-    cores=$(nproc)
-    max=$1
-    rank=$2
-    interval=$((max/cores))
-    echo "$((1 + interval * (rank - 1))) $((interval * rank))"
-}
-
-function run_owo() {
-    cores=$(nproc)
-    path=$1
-    max=$2
-    owo=$3
-    rank=$4
-
-    $owo "$path" $(gen_args $max $rank)
-}
-
-export -f gen_args
-export -f run_owo
-
-parallel --halt now,success=1 run_owo ~/your-project 1000000 ./result/bin/nix-owo ::: $(seq 1 $(nproc))
+parallel --halt now,success=1 ./result/bin/nix-owo ~/your-project $(nproc) ::: $(seq 1 $(nproc))
 ```

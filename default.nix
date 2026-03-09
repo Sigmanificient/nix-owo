@@ -2,6 +2,8 @@
   stdenv,
   nix,
   pkg-config,
+  meson,
+  ninja,
 }: stdenv.mkDerivation {
   name = "nix-hash";
 
@@ -9,7 +11,7 @@
 
   enableParallelBuilding = true;
 
-  nativeBuildInputs = [ pkg-config ];
+  nativeBuildInputs = [ meson ninja pkg-config ];
 
   buildInputs = [
     nix.libs.nix-util

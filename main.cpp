@@ -6,6 +6,16 @@
 
 using namespace nix;
 
+static std::string hash_to_string(Hash hash)
+{
+    std::string s = "sha256-";
+
+    const auto bytes = std::as_bytes(std::span<const uint8_t>{&hash.hash[0], hash.hashSize});
+    s += base64::encode(bytes);
+ 
+    return s;
+}
+
 int main(int argc, char **argv)
 {
     Path path = (argc > 1) ? argv[1] : ".";
@@ -20,9 +30,7 @@ int main(int argc, char **argv)
         root.dumpPath(CanonPath{abspath.relative_path().string()}, sink);
 
         HashResult result = sink.finish();
-
-        std::cout << result.hash.to_string(HashFormat::SRI, true) << "\n";
-
+        std::cout << hash_to_string(result.hash) << "\n";
         return 0;
     }
     catch (const Error & e) {

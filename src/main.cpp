@@ -22,7 +22,9 @@ int main(int argc, char **argv)
         SAdumpPath(root, CanonPath{abspath.relative_path().string()}, sink);
 
         HashResult result = sink.finish();
-        std::cout << hash_to_string(result.hash) << "\n";
+
+        std::cout << result.hash.to_string(HashFormat::SRI, true) << "\n";
+
         return 0;
     }
     catch (const Error & e) {

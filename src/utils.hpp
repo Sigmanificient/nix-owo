@@ -11,5 +11,3 @@ bool SAdumpContents(nix::SourceAccessor& sa, const nix::CanonPath & path, nix::S
 bool SAdump(nix::SourceAccessor& sa, const nix::CanonPath & path, nix::Sink & sink, uint64_t num = 0);
 
 bool SAdumpPath(nix::SourceAccessor& sa, const nix::CanonPath &path, nix::Sink &sink, uint64_t num = 0);
-
-std::string hash_to_string(nix::Hash hash);

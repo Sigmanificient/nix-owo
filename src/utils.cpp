@@ -92,15 +92,3 @@ bool SAdumpPath(SourceAccessor& sa, const CanonPath &path, Sink &sink, uint64_t 
     sink << "nix-archive-1";
     return SAdump(sa, path, sink, num);
 }
-
-// End
-
-std::string hash_to_string(Hash hash)
-{
-    std::string s = "sha256-";
-
-    const auto bytes = std::as_bytes(std::span<const uint8_t>{&hash.hash[0], hash.hashSize});
-    s += base64::encode(bytes);
- 
-    return s;
-}

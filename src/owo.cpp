@@ -26,7 +26,7 @@ int main(int argc, char **argv)
             return 1;
         }
         HashResult result = sink.finish();
-        auto hash = hash_to_string(result.hash);
+        auto hash = result.hash.to_string(nix::HashFormat::SRI, true);
         if (hash[47] == '0' && hash[48] == 'w' && hash[49] == '0') {
             std::cerr << std::endl;
             std::cout << hash << std::endl;;

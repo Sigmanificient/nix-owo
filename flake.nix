@@ -12,24 +12,26 @@
         "x86_64-linux"
         "aarch64-linux"
         "aarch64-darwin"
-      ] (system: function nixpkgs.legacyPackages.${system});
-  in {
-    formatter = forAllSystems (pkgs: pkgs.alejandra);
+      ] (system: function nixpkgs.legacyPackages.${system} system);
 
-    devShells = forAllSystems (pkgs: {
+    mkEnv = pkgs: {
+      FILTERPATH_SOURCE_TEST = pkgs.filterpath.src;
+      # sha256-FOewYznmWOWH2TyNySVoa+spvH4QlXnjlko+/zFiNik=
+
+      CRITERION_SOURCE_TEST = pkgs.criterion.src;
+      # sha256-X4m/uCyanS7HLtf6GyK4XuaT5i+HQt1PZC7gd813IVQ=
+
+      QTILE_SOURCE_TEST = pkgs.python3Packages.qtile.src;
+      # sha256-PPyI+IGvHBQusVmU3D26VjYjLaa9+94KUqNwbQSzeaI=
+    };
+  in {
+    formatter = forAllSystems (pkgs: system: pkgs.alejandra);
+
+    devShells = forAllSystems (pkgs: system: {
       default = pkgs.mkShell {
         hardeningDisable = ["fortify"];
 
-        env = {
-          FILTERPATH_SOURCE_TEST = pkgs.filterpath.src;
-          # sha256-FOewYznmWOWH2TyNySVoa+spvH4QlXnjlko+/zFiNik=
-
-          CRITERION_SOURCE_TEST = pkgs.criterion.src;
-          # sha256-X4m/uCyanS7HLtf6GyK4XuaT5i+HQt1PZC7gd813IVQ=
-
-          QTILE_SOURCE_TEST = pkgs.python3Packages.qtile.src;
-          # sha256-PPyI+IGvHBQusVmU3D26VjYjLaa9+94KUqNwbQSzeaI=
-        };
+        env = mkEnv pkgs;
 
         inputsFrom = [
           self.packages.${pkgs.stdenv.hostPlatform.system}.nix-hash
@@ -42,8 +44,18 @@
       };
     });
 
-    packages = forAllSystems (pkgs: {
-      nix-hash = pkgs.callPackage ./default.nix { };
+    checks = forAllSystems (pkgs: system: {
+      test = pkgs.runCommand "test" {
+        env = mkEnv pkgs;
+      } ''
+        ${./test-nix-hash.sh} ${self.packages.${system}.nix-hash}/bin/nix-hash
+        touch $out
+      '';
+    });
+
+    packages = forAllSystems (pkgs: system: rec {
+      nix-hash = pkgs.callPackage ./default.nix {};
+      default = nix-hash;
     });
   };
 }

@@ -42,14 +42,14 @@ OBJ := $(SRC:%.cpp=$(BUILD_DIR)/%.o)
 .PHONY: all
 all: $(OUT)
 
-$(BUILD_DIR)/%.o: %.cpp
+$(BUILD_DIR)/%.o: src/%.cpp
 	@ mkdir -p $(dir $@)
 	$Q $(CXX) $(CXXFLAGS) -o $@ -c $<
 	@ $(LOG_TIME) "CXX $(C_PURPLE) $(notdir $@) $(C_RESET)"
 
 $(OUT): $(OBJ)
 	@ mkdir -p $(dir $@)
-	$Q $(CXX) -o $@ main.cpp $(OBJ) $(CXXFLAGS) $(LDLIBS) $(LDFLAGS)
+	$Q $(CXX) -o $@ src/main.cpp $(OBJ) $(CXXFLAGS) $(LDLIBS) $(LDFLAGS)
 	@ $(LOG_TIME) "LD $(C_GREEN) $@ $(C_RESET)"
 
 .PHONY: clean

@@ -3,6 +3,7 @@
   stdenv,
   nix,
   pkg-config,
+  boost,
 }:
 stdenv.mkDerivation {
   name = "nix-hash";
@@ -18,7 +19,10 @@ stdenv.mkDerivation {
 
   nativeBuildInputs = [pkg-config];
 
-  buildInputs = [nix.libs.nix-util];
+  buildInputs = [
+    nix.libs.nix-util
+    boost
+  ];
 
   env.PREFIX = placeholder "out";
 

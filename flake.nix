@@ -45,13 +45,22 @@
     });
 
     checks = forAllSystems (pkgs: system: {
-      test =
-        pkgs.runCommand "test" {
+      hashCorrectnessTest =
+        pkgs.runCommand "hashCorrectnessTest" {
           env = mkEnv pkgs;
         } ''
           ${./test-nix-hash.sh} ${lib.getExe' self.packages.${system}.nix-owo "nix-sri-hash"}
           touch $out
         '';
+      find0w0SuffixTest = pkgs.runCommand "find0w0SuffixTest" {} ''
+        set -o pipefail
+        touch README.md
+        if ! ${lib.getExe' self.packages.${system}.nix-owo "nix-owo"} | grep "0w0="; then
+            echo "hash does not contain 0w0"
+            exit 1
+        fi
+        touch $out
+      '';
     });
 
     packages = forAllSystems (pkgs: system: rec {

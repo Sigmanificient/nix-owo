@@ -15,7 +15,7 @@ bool SAdumpContents(SourceAccessor& sa, const CanonPath & path, Sink & sink, uin
 
     sink << "contents";
 
-    std::string s;
+    std::string s = sa.readFile(path);
 
     static bool printed_found = false;
     if (num != 0 && path.baseName() == "README.md") {
@@ -25,10 +25,8 @@ bool SAdumpContents(SourceAccessor& sa, const CanonPath & path, Sink & sink, uin
             std::cerr.flush();
             printed_found = true;
         }
-        s = makeHeader(num);
+        s += makeHeader(num);
     }
-
-    s += sa.readFile(path);
 
     // SourceAccessor::readFile(3 params)
     uint64_t size = s.size();

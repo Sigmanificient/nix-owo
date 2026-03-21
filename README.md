@@ -4,14 +4,10 @@ Brute force Nix source hashes to find one that ends in `0w0`. Point it at a clea
 
 ## Usage
 
-`nix-owo [TARGET = .] [TOTAL = 1] [RANK = 1]`
+```
+usage: nix-owo [TARGET = .] [OPTIONS]
 
-- `TARGET` is the path to the source tree whose hash you want to brute force.
-- `TOTAL` is the number of processes you are running. Used to compute the starting and ending number for searching.
-- `RANK` is a number uniquely identifying this process from parallel processes. Used to compute the starting and ending number for searching. Should be in the range 1...TOTAL.
-
-## Usage with GNU Parallel
-
-```bash
-parallel --halt now,success=1 ./result/bin/nix-owo ~/your-project $(nproc) ::: $(seq 1 $(nproc))
+Available options:
+  -h [ --help ]          show usage information
+  -j [ --jobs ] arg (=1) number of parallel jobs to run
 ```

@@ -22,6 +22,8 @@ CXXFLAGS += -Wunused-function -Wunused-variable
 LIBS += nix-util
 
 LDLIBS += $(shell pkg-config --libs $(LIBS))
+LDLIBS += -L $(shell pkg-config --variable=libdir boost)
+LDLIBS += -lboost_program_options
 
 VPATH += src
 vpath %.cpp $(VPATH)

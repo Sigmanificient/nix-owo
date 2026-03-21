@@ -43,9 +43,6 @@ bool SAdumpContents(SourceAccessor& sa, const CanonPath & path, Sink & sink, uin
 
 bool SAdump(SourceAccessor& sa, const CanonPath & path, Sink & sink, uint64_t num)
 {
-    if (path.baseName() == ".git")
-        return false;
-
     bool ret = false;
 
     auto st = sa.lstat(path);

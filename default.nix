@@ -11,6 +11,7 @@ stdenv.mkDerivation {
     "Makefile"
     ".cpp"
     ".hpp"
+    ".sh"
   ];
 
   enableParallelBuilding = true;
@@ -20,6 +21,10 @@ stdenv.mkDerivation {
   buildInputs = [nix.libs.nix-util];
 
   env.PREFIX = placeholder "out";
+
+  doCheck = true;
+
+  nativeCheckInputs = [ nix ];
 
   meta = {
     description = "Customize your nix (SRI) hashes";

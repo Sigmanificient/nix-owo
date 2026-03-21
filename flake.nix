@@ -44,16 +44,6 @@
       };
     });
 
-    checks = forAllSystems (pkgs: system: {
-      test =
-        pkgs.runCommand "test" {
-          env = mkEnv pkgs;
-        } ''
-          ${./test-nix-hash.sh} ${lib.getExe' self.packages.${system}.nix-owo "nix-sri-hash"}
-          touch $out
-        '';
-    });
-
     packages = forAllSystems (pkgs: system: rec {
       nix-owo = pkgs.callPackage ./default.nix {};
 

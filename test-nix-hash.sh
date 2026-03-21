@@ -4,29 +4,21 @@ set -euo pipefail
 nix_hash_path="$1"
 
 run_test () {
-  name="$1"
-  path="$2"
-  expected="$3"
+  path="$1"
+  expected=$(nix-hash --sri "$1" --type sha256)
 
-  echo "Testing $name"
-  start=$(date +%s%N)
+  echo -n "Testing $1 - "
 
   result="$($nix_hash_path "$path" 2>/dev/null)"
   if [ "$result" != "$expected" ]; then
-    echo "Mismatch on iteration $i"
+    echo "KO"
     echo "expected: $expected"
     echo "got:      $result"
     exit 1
   fi
 
-  end=$(date +%s%N)
-  elapsed_ns=$((end - start))
-  elapsed_ms=$((elapsed_ns / 1000000))
-
-  echo "OK ($name) - ${elapsed_ms} ms for 100 runs"
-  echo
+  echo "OK"
 }
 
-run_test "FILTERPATH" "$FILTERPATH_SOURCE_TEST" "sha256-FOewYznmWOWH2TyNySVoa+spvH4QlXnjlko+/zFiNik="
-run_test "CRITERION" "$CRITERION_SOURCE_TEST" "sha256-X4m/uCyanS7HLtf6GyK4XuaT5i+HQt1PZC7gd813IVQ="
-run_test "QTILE" "$QTILE_SOURCE_TEST" "sha256-PPyI+IGvHBQusVmU3D26VjYjLaa9+94KUqNwbQSzeaI="
+run_test "."
+run_test "src"

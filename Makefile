@@ -64,8 +64,12 @@ re: fclean all
 PREFIX ?= /usr/bin
 
 .PHONY: check
+check: README := $(shell mktemp -d)/README.md
 check:
 	./test-nix-hash.sh ./nix-sri-hash
+	echo "test" > $(README)
+	echo $$(./nix-owo $(README) | grep -P '<!-- 0w0: \d+ -->') >> $(README)
+	nix-hash --sri $(README) --type sha256 | grep 0w0
 
 .PHONY: install
 install:

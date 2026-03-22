@@ -8,6 +8,11 @@ Brute force Nix source hashes to find one that ends in `0w0`. Point it at a clea
 usage: nix-owo [TARGET = .] [OPTIONS]
 
 Available options:
-  -h [ --help ]          show usage information
-  -j [ --jobs ] arg (=1) number of parallel jobs to run
+  -h [ --help ]                 show usage information
+  -p [ --pattern ] arg (=0w0=)  Regex pattern to search for; to search for a
+                                pattern at the beginning of the hash, pass
+                                '-0w0', and for the ending of the hash, pass
+                                '0w0='
+  -v [ --verbose ] [=arg(=1)]   verbose
+  -j [ --jobs ] [=arg(=)] (=) number of parallel jobs to run
 ```

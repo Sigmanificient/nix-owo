@@ -4,6 +4,7 @@
 #include <iostream>
 #include <mutex>
 #include <thread>
+#include <regex>
 
 #include <boost/program_options.hpp>
 #include <boost/program_options/positional_options.hpp>
@@ -19,6 +20,7 @@ struct Params {
   bool verbose = false;
 
   std::string target_path;
+  std::regex pattern;
   uint8_t jobs;
 };
 
@@ -42,6 +44,11 @@ parse_arguments(int argc, char **argv)
   desc.add_options()
       ("help,h", "show usage information")
       ("target", po::value<std::string>()->default_value("."), "Target path")
+      ("pattern,p",
+        po::value<std::string>()->default_value("0w0="),
+        "Regex pattern to search for; "
+        "to search for a pattern at the beginning of the hash, pass '-0w0', "
+        "and for the ending of the hash, pass '0w0='")
       ("verbose,v", po::value<bool>()->implicit_value(true), "verbose")
       ("jobs,j",
           po::value<uint8_t>()->default_value(1)->implicit_value(cpu_count),
@@ -63,6 +70,7 @@ parse_arguments(int argc, char **argv)
           .show_help = vm.contains("help"),
           .verbose = vm.contains("verbose"),
           .target_path = vm["target"].as<std::string>(),
+          .pattern = std::regex(vm["pattern"].as<std::string>()),
           .jobs = vm["jobs"].as<uint8_t>(),
       };
   } catch (const std::exception &e) {
@@ -130,7 +138,7 @@ int main(int argc, char **argv)
                     std::cerr << num << " -> " << hash << "\n";
                 }
 
-                if (hash[47] == '0' && hash[48] == 'w' && hash[49] == '0') {
+                if (std::regex_search(hash, parameters.pattern)) {
                     std::lock_guard lock(log_mutex);
                     state = State::FOUND_MATCH;
                     if (!parameters.verbose)

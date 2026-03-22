@@ -19,7 +19,7 @@ struct Params {
   bool verbose = false;
 
   std::string target_path;
-  uint8_t jobs;
+  unsigned int jobs;
 };
 
 enum class State : uint8_t {
@@ -36,7 +36,7 @@ parse_arguments(int argc, char **argv)
   po::positional_options_description p_desc;
   po::variables_map vm;
 
-  auto cpu_count = std::max(1U, std::thread::hardware_concurrency());
+  unsigned int cpu_count = std::max(1U, std::thread::hardware_concurrency());
 
   p_desc.add("target", 1);
   desc.add_options()
@@ -44,7 +44,7 @@ parse_arguments(int argc, char **argv)
       ("target", po::value<std::string>()->default_value("."), "Target path")
       ("verbose,v", po::value<bool>()->implicit_value(true), "verbose")
       ("jobs,j",
-          po::value<uint8_t>()->default_value(1)->implicit_value(cpu_count),
+          po::value<unsigned int>()->default_value(1)->implicit_value(cpu_count),
           "number of parallel jobs to run")
       ;
 
@@ -63,7 +63,7 @@ parse_arguments(int argc, char **argv)
           .show_help = vm.contains("help"),
           .verbose = vm.contains("verbose"),
           .target_path = vm["target"].as<std::string>(),
-          .jobs = vm["jobs"].as<uint8_t>(),
+          .jobs = vm["jobs"].as<unsigned int>(),
       };
   } catch (const std::exception &e) {
       return std::unexpected(e.what());

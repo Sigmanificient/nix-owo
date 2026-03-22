@@ -16,6 +16,7 @@ using namespace nix;
 
 struct Params {
   bool show_help = false;
+  bool verbose = false;
 
   std::string target_path;
   uint8_t jobs;
@@ -41,6 +42,7 @@ parse_arguments(int argc, char **argv)
   desc.add_options()
       ("help,h", "show usage information")
       ("target", po::value<std::string>()->default_value("."), "Target path")
+      ("verbose,v", po::value<bool>()->implicit_value(true), "verbose")
       ("jobs,j",
           po::value<uint8_t>()->default_value(1)->implicit_value(cpu_count),
           "number of parallel jobs to run")
@@ -59,6 +61,7 @@ parse_arguments(int argc, char **argv)
 
       return Params{
           .show_help = vm.contains("help"),
+          .verbose = vm.contains("verbose"),
           .target_path = vm["target"].as<std::string>(),
           .jobs = vm["jobs"].as<uint8_t>(),
       };
@@ -120,13 +123,16 @@ int main(int argc, char **argv)
                 HashResult result = sink.finish();
                 auto hash = result.hash.to_string(nix::HashFormat::SRI, true);
 
+                if (parameters.verbose)
+                    std::cerr << num << " -> " << hash << "\n";
+
                 if (hash[47] == '0' && hash[48] == 'w' && hash[49] == '0') {
                     std::lock_guard lock(log_mutex);
                     state = State::FOUND_MATCH;
                     std::cout << "<!-- " << num << " -->\n";
                     return;
                 }
-                if (num % (100 * num_threads) == 0) {
+                if (!parameters.verbose && num % (100 * num_threads) == 0) {
                     std::lock_guard lock(log_mutex);
                     if (state != State::ONGOING)
                         return;

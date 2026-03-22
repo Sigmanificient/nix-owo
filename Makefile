@@ -69,7 +69,7 @@ check: README := $(shell mktemp -d)/README.md
 check:
 	./test-nix-hash.sh ./nix-sri-hash
 	echo "test" > $(README)
-	echo $$(./nix-owo $(dir $(README)) | grep -P '<!-- \d+ -->') >> $(README)
+	sed -i "1 i\\$$(./nix-owo $(dir $(README)))" $(README)
 	nix-hash --sri $(dir $(README)) --type sha256 | grep 0w0
 
 .PHONY: install

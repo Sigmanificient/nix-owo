@@ -30,10 +30,13 @@ struct MagicSourceAccessor : public nix::PosixSourceAccessor {
 
     std::string readFile(const nix::CanonPath &path) override {
         const std::string &abspath = path.abs();
-        std::string content = nix::readFile(abspath);
+        std::string content;
 
         if (path.abs() == m_base + "/README.md")
-            content += "<!-- " + std::to_string(m_magic) + " -->\n";
+            content = "<!-- " + std::to_string(m_magic) + " -->\n";
+
+        content += nix::readFile(abspath);
+
         return content;
     };
 };

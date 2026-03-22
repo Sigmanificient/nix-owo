@@ -28,7 +28,6 @@ LDLIBS += -lboost_program_options
 VPATH += src
 vpath %.cpp $(VPATH)
 
-SRC += utils.cpp
 OBJ = $(SRC:%.cpp=$(BUILD_DIR)/%.o)
 
 .PHONY: all
@@ -70,8 +69,8 @@ check: README := $(shell mktemp -d)/README.md
 check:
 	./test-nix-hash.sh ./nix-sri-hash
 	echo "test" > $(README)
-	echo $$(./nix-owo $(README) | grep -P '<!-- 0w0: \d+ -->') >> $(README)
-	nix-hash --sri $(README) --type sha256 | grep 0w0
+	echo $$(./nix-owo $(dir $(README)) | grep -P '<!-- \d+ -->') >> $(README)
+	nix-hash --sri $(dir $(README)) --type sha256 | grep 0w0
 
 .PHONY: install
 install:

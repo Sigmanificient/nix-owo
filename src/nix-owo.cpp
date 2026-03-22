@@ -8,7 +8,7 @@
 #include <boost/program_options.hpp>
 #include <boost/program_options/positional_options.hpp>
 
-#include "utils.hpp"
+#include "source-accessors.hpp"
 
 namespace po = boost::program_options;
 
@@ -71,18 +71,12 @@ static
 bool check_for_readme(PosixSourceAccessor root, CanonPath &c_path)
 {
     try {
-        HashSink sink(HashAlgorithm::SHA256);
-        if (!SAdumpPath(root, c_path, sink, 1)) {
-            std::cerr << "Could not find README.md" << '\n';
-            return false;
-        }
-    } catch (std::exception &e) {
-        std::cerr << e.what() << '\n';
+        root.lstat(c_path / "README.md");
+        return true;
+    } catch (nix::FileNotFound &) {
         return false;
     }
-    return true;
 }
-
 
 int main(int argc, char **argv)
 {
@@ -97,7 +91,7 @@ int main(int argc, char **argv)
         return EXIT_SUCCESS;
 
     std::filesystem::path abspath = absPath(parameters.target_path);
-    PosixSourceAccessor root = abspath.root_path();
+    MagicSourceAccessor root(abspath);
 
     std::vector<std::thread> threads;
     uint64_t num_threads = parameters.jobs;
@@ -115,9 +109,13 @@ int main(int argc, char **argv)
 
     auto find_matching_hash = [&](uint64_t start, uint64_t end) {
         try {
+            MagicSourceAccessor thread_root(abspath);
+
             for (uint64_t num = start; num < end && state == State::ONGOING; ++num) {
                 HashSink sink(HashAlgorithm::SHA256);
-                SAdumpPath(root, c_path, sink, num);
+
+                thread_root.setMagicNumber(num);
+                thread_root.dumpPath(c_path, sink);
 
                 HashResult result = sink.finish();
                 auto hash = result.hash.to_string(nix::HashFormat::SRI, true);
@@ -125,9 +123,7 @@ int main(int argc, char **argv)
                 if (hash[47] == '0' && hash[48] == 'w' && hash[49] == '0') {
                     std::lock_guard lock(log_mutex);
                     state = State::FOUND_MATCH;
-                    std::cerr << '\n';
-                    std::cout << hash << '\n';
-                    std::cout << makeHeader(num);
+                    std::cout << "<!-- " << num << " -->\n";
                     return;
                 }
                 if (num % (100 * num_threads) == 0) {

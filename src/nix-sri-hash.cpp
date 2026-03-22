@@ -4,8 +4,6 @@
 #include <nix/util/hash.hh>
 #include <nix/util/posix-source-accessor.hh>
 
-#include "utils.hpp"
-
 using namespace nix;
 
 int main(int argc, char **argv)
@@ -17,10 +15,7 @@ int main(int argc, char **argv)
     HashSink sink(HashAlgorithm::SHA256);
 
     try {
-        sink.writeUnbuffered(""); // ensure buffer exists (optional)
-
-        SAdumpPath(root, CanonPath{abspath.relative_path().string()}, sink);
-
+        root.dumpPath(CanonPath{abspath.relative_path().string()}, sink);
         HashResult result = sink.finish();
 
         std::cout << result.hash.to_string(HashFormat::SRI, true) << "\n";

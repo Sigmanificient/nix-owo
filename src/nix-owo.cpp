@@ -133,6 +133,8 @@ int main(int argc, char **argv)
                 if (hash[47] == '0' && hash[48] == 'w' && hash[49] == '0') {
                     std::lock_guard lock(log_mutex);
                     state = State::FOUND_MATCH;
+                    if (!parameters.verbose)
+                        std::cerr << "\n";
                     std::cout << "<!-- " << num << " -->\n";
                     return;
                 }

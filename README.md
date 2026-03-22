@@ -2,6 +2,20 @@
 
 Brute force Nix source hashes to find one that ends in `0w0`. Point it at a clean source tree containing a README.md file and it will generate an HTML comment you can add to the top of your README.md that will cause the entire source tree to yield the 0w0 hash. A match will be found after about 100,000 iterations (about 30 seconds for small projects).
 
+The easiest way to run this on a clean source is to:
+
+1. Perform a fresh checkout of your repository
+2. Open `nix repl`
+3. `nix-repl> :l <nixpkgs>`
+4. `nix-repl> lib.cleanSource /path/to/fresh/checkout`
+5. Use the printed `outPath` as the target argument to nix-owo
+
+Alternatively, if your package is already in nixpkgs, you can use the source that nixpkgs uses.
+
+```
+nix eval --impure --expr '(import <nixpkgs> {}).PACKAGE.src.outPath'
+```
+
 ## Usage
 
 ```

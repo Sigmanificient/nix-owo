@@ -33,7 +33,7 @@ stdenv.mkDerivation {
   meta = {
     description = "Customize your nix (SRI) hashes";
     license = lib.licenses.mit;
-    maintainers = with lib.maintainers; [sigmanificient];
+    maintainers = with lib.maintainers; [sigmanificient lisanna-dettwyler];
     platforms = lib.platforms.unix;
   };
 }

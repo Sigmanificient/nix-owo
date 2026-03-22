@@ -123,8 +123,12 @@ int main(int argc, char **argv)
                 HashResult result = sink.finish();
                 auto hash = result.hash.to_string(nix::HashFormat::SRI, true);
 
-                if (parameters.verbose)
+                if (parameters.verbose) {
+                    std::lock_guard lock(log_mutex);
+                    if (state != State::ONGOING)
+                        return;
                     std::cerr << num << " -> " << hash << "\n";
+                }
 
                 if (hash[47] == '0' && hash[48] == 'w' && hash[49] == '0') {
                     std::lock_guard lock(log_mutex);

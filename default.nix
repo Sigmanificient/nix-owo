@@ -6,7 +6,7 @@
   boost,
 }:
 stdenv.mkDerivation {
-  name = "nix-hash";
+  name = "nix-owo";
 
   src = lib.sourceFilesBySuffices ./. [
     "Makefile"
@@ -35,5 +35,6 @@ stdenv.mkDerivation {
     license = lib.licenses.mit;
     maintainers = with lib.maintainers; [sigmanificient lisanna-dettwyler];
     platforms = lib.platforms.unix;
+    mainProgram = "nix-owo";
   };
 }
